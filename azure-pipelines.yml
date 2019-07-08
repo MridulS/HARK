@@ -27,5 +27,5 @@ jobs:
   - script: pip install -r requirements.txt
     displayName: 'Install requirements'
 
-  - script: pytest
+  - script: python HARK/BayerLuetticke/BayerLuetticke_code/TwoAssetCode/FluctuationsTwoAsset.py
     displayName: 'Run test'
