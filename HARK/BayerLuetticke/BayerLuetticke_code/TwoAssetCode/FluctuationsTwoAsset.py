@@ -1425,7 +1425,7 @@ if __name__ == '__main__':
     from time import clock
     import pickle
     
-    EX3SS=pickle.load(open("EX3SS_20.p", "rb"))
+    EX3SS=pickle.load(open("HARK/BayerLuetticke/BayerLuetticke_code/TwoAssetCode/EX3SS_20.p", "rb"))
     
     start_time0 = time.clock()        
     
