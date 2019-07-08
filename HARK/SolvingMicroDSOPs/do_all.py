@@ -1,4 +1,4 @@
-'''
+"""
 Run all of the plots and tables in SolvingMicroDSOPs.
 
 To execute, do the following on the Python command line:
@@ -44,7 +44,7 @@ attempt to import the necessary MicroDSOP sub-modules as though they are part of
 the HARK package; if that fails, this script reverts to manaully updating the 
 Python PATH with the locations of the MicroDSOP directory structure so it can 
 still run. 
-'''
+"""
 
 from __future__ import division, print_function
 from builtins import str, range
@@ -55,22 +55,32 @@ import os, sys
 my_file_path = os.path.dirname(os.path.abspath(__file__))
 
 # Pathnames to the other files:
-calibration_dir = os.path.join(my_file_path, "Calibration") # Relative directory for primitive parameter files
-tables_dir = os.path.join(my_file_path, "Tables") # Relative directory for primitive parameter files
-figures_dir = os.path.join(my_file_path, "Figures") # Relative directory for primitive parameter files
-code_dir = os.path.join(my_file_path, "Code") # Relative directory for primitive parameter files
+calibration_dir = os.path.join(
+    my_file_path, "Calibration"
+)  # Relative directory for primitive parameter files
+tables_dir = os.path.join(
+    my_file_path, "Tables"
+)  # Relative directory for primitive parameter files
+figures_dir = os.path.join(
+    my_file_path, "Figures"
+)  # Relative directory for primitive parameter files
+code_dir = os.path.join(
+    my_file_path, "Code"
+)  # Relative directory for primitive parameter files
 
-# Import modules from local repository. If local repository is part of HARK, 
-# this will import from HARK. Otherwise manual pathname specification is in 
+# Import modules from local repository. If local repository is part of HARK,
+# this will import from HARK. Otherwise manual pathname specification is in
 # order.
-try: 
+try:
     # Import from core HARK code first:
     from HARK.SolvingMicroDSOPs.Code import StructEstimation as struct
 except:
-    print("**************** Manually specifying pathnames for modules *******************")
+    print(
+        "**************** Manually specifying pathnames for modules *******************"
+    )
     # It appears that the current module is not part of HARK, therefore we will
     # manually add the pathnames to the various files directly to the beginning
-    # of the Python path. This will be needed for all files that will run in 
+    # of the Python path. This will be needed for all files that will run in
     # lower directories.
     sys.path.insert(0, calibration_dir)
     sys.path.insert(0, tables_dir)
@@ -78,38 +88,55 @@ except:
     sys.path.insert(0, code_dir)
     sys.path.insert(0, my_file_path)
 
-    # Manual import needed, should draw from first instance at start of Python 
-    # PATH added above: 
+    # Manual import needed, should draw from first instance at start of Python
+    # PATH added above:
     import StructEstimation as struct
 
 
-# Define settings for "main()" function in StructuralEstiamtion.py based on 
-# resource requirements: 
+# Define settings for "main()" function in StructuralEstiamtion.py based on
+# resource requirements:
 
-low_resource = {'estimate_model':True, 'make_contour_plot':False, 'compute_standard_errors':False}
-# Author note: 
+low_resource = {
+    "estimate_model": True,
+    "make_contour_plot": False,
+    "compute_standard_errors": False,
+}
+# Author note:
 # This takes approximately 90 seconds on a laptop with the following specs:
 # Linux, Ubuntu 14.04.1 LTS, 8G of RAM, Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz
 
-medium_resource = {'estimate_model':True, 'make_contour_plot':True, 'compute_standard_errors':False}
-# Author note: 
+medium_resource = {
+    "estimate_model": True,
+    "make_contour_plot": True,
+    "compute_standard_errors": False,
+}
+# Author note:
 # This takes approximately 7 minutes on a laptop with the following specs:
 # Linux, Ubuntu 14.04.1 LTS, 8G of RAM, Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz
 
-high_resource = {'estimate_model':True, 'make_contour_plot':False, 'compute_standard_errors':True}
-# Author note: 
+high_resource = {
+    "estimate_model": True,
+    "make_contour_plot": False,
+    "compute_standard_errors": True,
+}
+# Author note:
 # This takes approximately 30 minutes on a laptop with the following specs:
 # Linux, Ubuntu 14.04.1 LTS, 8G of RAM, Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz
 
-all_replications = {'estimate_model':True, 'make_contour_plot':True, 'compute_standard_errors':True}
-# Author note: 
+all_replications = {
+    "estimate_model": True,
+    "make_contour_plot": True,
+    "compute_standard_errors": True,
+}
+# Author note:
 # This takes approximately 40 minutes on a laptop with the following specs:
 # Linux, Ubuntu 14.04.1 LTS, 8G of RAM, Intel(R) Core(TM) i7-4700MQ CPU @ 2.40GHz
 
 
-# Ask the user which replication to run, and run it: 
+# Ask the user which replication to run, and run it:
 def run_replication():
-    which_replication = input("""Which replication would you like to run? (See documentation in do_all.py for details.) Please enter the option number to run that option; default is in brackets:
+    which_replication = input(
+        """Which replication would you like to run? (See documentation in do_all.py for details.) Please enter the option number to run that option; default is in brackets:
         
         [1] low-resource:    ~90 sec; output ./Tables/estimate_results.csv
         
@@ -119,30 +146,31 @@ def run_replication():
 
          4  all:             ~40 min; output: all above.
          
-         q  quit: exit without executing.\n\n""")
+         q  quit: exit without executing.\n\n"""
+    )
 
-
-    if which_replication == 'q':
+    if which_replication == "q":
         return
 
-    elif which_replication == '1' or which_replication == '':
+    elif which_replication == "1" or which_replication == "":
         print("Running low-resource replication...")
         struct.main(**low_resource)
-        
-    elif which_replication == '2':
+
+    elif which_replication == "2":
         print("Running medium-resource replication...")
         struct.main(**medium_resource)
 
-    elif which_replication == '3':
+    elif which_replication == "3":
         print("Running high-resource replication...")
         struct.main(**high_resource)
 
-    elif which_replication == '4':
+    elif which_replication == "4":
         print("Running all replications...")
         struct.main(**all_replications)
 
     else:
         return
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run_replication()

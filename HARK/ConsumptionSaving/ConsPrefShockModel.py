@@ -1,30 +1,44 @@
-'''
+"""
 Extensions to ConsIndShockModel concerning models with preference shocks.
 It currently only two models:
 
 1) An extension of ConsIndShock, but with an iid lognormal multiplicative shock each period.
 2) A combination of (1) and ConsKinkedR, demonstrating how to construct a new model
    by inheriting from multiple classes.
-'''
+"""
 from __future__ import division, print_function
 from __future__ import absolute_import
 from builtins import str
 from builtins import range
 import numpy as np
 from HARK.utilities import approxMeanOneLognormal
-from HARK.ConsumptionSaving.ConsIndShockModel import IndShockConsumerType, ConsumerSolution, ConsIndShockSolver, \
-                                   ValueFunc, MargValueFunc, KinkedRconsumerType, ConsKinkedRsolver
-from HARK.interpolation import LinearInterpOnInterp1D, LinearInterp, CubicInterp, LowerEnvelope
+from HARK.ConsumptionSaving.ConsIndShockModel import (
+    IndShockConsumerType,
+    ConsumerSolution,
+    ConsIndShockSolver,
+    ValueFunc,
+    MargValueFunc,
+    KinkedRconsumerType,
+    ConsKinkedRsolver,
+)
+from HARK.interpolation import (
+    LinearInterpOnInterp1D,
+    LinearInterp,
+    CubicInterp,
+    LowerEnvelope,
+)
+
 
 class PrefShockConsumerType(IndShockConsumerType):
-    '''
+    """
     A class for representing consumers who experience multiplicative shocks to
     utility each period, specified as iid lognormal.
-    '''
-    shock_vars_ = IndShockConsumerType.shock_vars_ + ['PrefShkNow']
+    """
 
-    def __init__(self,cycles=1,time_flow=True,**kwds):
-        '''
+    shock_vars_ = IndShockConsumerType.shock_vars_ + ["PrefShkNow"]
+
+    def __init__(self, cycles=1, time_flow=True, **kwds):
+        """
         Instantiate a new ConsumerType with given data, and construct objects
         to be used during solution (income distribution, assets grid, etc).
         See ConsumerParameters.init_pref_shock for a dictionary of
@@ -40,15 +54,15 @@ class PrefShockConsumerType(IndShockConsumerType):
         Returns
         -------
         None
-        '''
-        IndShockConsumerType.__init__(self,cycles=cycles,time_flow=time_flow,**kwds)
-        self.solveOnePeriod = solveConsPrefShock # Choose correct solver
-        
+        """
+        IndShockConsumerType.__init__(self, cycles=cycles, time_flow=time_flow, **kwds)
+        self.solveOnePeriod = solveConsPrefShock  # Choose correct solver
+
     def preSolve(self):
         self.updateSolutionTerminal()
 
     def update(self):
-        '''
+        """
         Updates the assets grid, income process, terminal period solution, and
         preference shock process.  A very slight extension of IndShockConsumerType.update()
         for the preference shock model.
@@ -60,12 +74,14 @@ class PrefShockConsumerType(IndShockConsumerType):
         Returns
         -------
         None
-        '''
-        IndShockConsumerType.update(self)  # Update assets grid, income process, terminal solution
-        self.updatePrefShockProcess()     # Update the discrete preference shock process
+        """
+        IndShockConsumerType.update(
+            self
+        )  # Update assets grid, income process, terminal solution
+        self.updatePrefShockProcess()  # Update the discrete preference shock process
 
     def updatePrefShockProcess(self):
-        '''
+        """
         Make a discrete preference shock structure for each period in the cycle
         for this agent type, storing them as attributes of self for use in the
         solution (and other methods).
@@ -77,24 +93,27 @@ class PrefShockConsumerType(IndShockConsumerType):
         Returns
         -------
         none
-        '''
+        """
         time_orig = self.time_flow
         self.timeFwd()
 
-        PrefShkDstn = [] # discrete distributions of preference shocks
+        PrefShkDstn = []  # discrete distributions of preference shocks
         for t in range(len(self.PrefShkStd)):
             PrefShkStd = self.PrefShkStd[t]
-            PrefShkDstn.append(approxMeanOneLognormal(N=self.PrefShkCount,
-                                                      sigma=PrefShkStd,tail_N=self.PrefShk_tail_N))
+            PrefShkDstn.append(
+                approxMeanOneLognormal(
+                    N=self.PrefShkCount, sigma=PrefShkStd, tail_N=self.PrefShk_tail_N
+                )
+            )
 
         # Store the preference shocks in self (time-varying) and restore time flow
         self.PrefShkDstn = PrefShkDstn
-        self.addToTimeVary('PrefShkDstn')
+        self.addToTimeVary("PrefShkDstn")
         if not time_orig:
             self.timeRev()
 
     def getShocks(self):
-        '''
+        """
         Gets permanent and transitory income shocks for this period as well as preference shocks.
 
         Parameters
@@ -104,18 +123,22 @@ class PrefShockConsumerType(IndShockConsumerType):
         Returns
         -------
         None
-        '''
-        IndShockConsumerType.getShocks(self) # Get permanent and transitory income shocks
-        PrefShkNow = np.zeros(self.AgentCount) # Initialize shock array
+        """
+        IndShockConsumerType.getShocks(
+            self
+        )  # Get permanent and transitory income shocks
+        PrefShkNow = np.zeros(self.AgentCount)  # Initialize shock array
         for t in range(self.T_cycle):
             these = t == self.t_cycle
             N = np.sum(these)
             if N > 0:
-                PrefShkNow[these] = self.RNG.permutation(approxMeanOneLognormal(N,sigma=self.PrefShkStd[t])[1])
+                PrefShkNow[these] = self.RNG.permutation(
+                    approxMeanOneLognormal(N, sigma=self.PrefShkStd[t])[1]
+                )
         self.PrefShkNow = PrefShkNow
 
     def getControls(self):
-        '''
+        """
         Calculates consumption for each consumer of this type using the consumption functions.
 
         Parameters
@@ -125,17 +148,18 @@ class PrefShockConsumerType(IndShockConsumerType):
         Returns
         -------
         None
-        '''
+        """
         cNrmNow = np.zeros(self.AgentCount) + np.nan
         for t in range(self.T_cycle):
             these = t == self.t_cycle
-            cNrmNow[these] = self.solution[t].cFunc(self.mNrmNow[these],self.PrefShkNow[these])
+            cNrmNow[these] = self.solution[t].cFunc(
+                self.mNrmNow[these], self.PrefShkNow[these]
+            )
         self.cNrmNow = cNrmNow
         return None
 
-
     def calcBoundingValues(self):
-        '''
+        """
         Calculate human wealth plus minimum and maximum MPC in an infinite
         horizon model with only one period repeated indefinitely.  Store results
         as attributes of self.  Human wealth is the present discounted value of
@@ -152,11 +176,11 @@ class PrefShockConsumerType(IndShockConsumerType):
         Returns
         -------
         None
-        '''
+        """
         raise NotImplementedError()
 
-    def makeEulerErrorFunc(self,mMax=100,approx_inc_dstn=True):
-        '''
+    def makeEulerErrorFunc(self, mMax=100, approx_inc_dstn=True):
+        """
         Creates a "normalized Euler error" function for this instance, mapping
         from market resources to "consumption error per dollar of consumption."
         Stores result in attribute eulerErrorFunc as an interpolated function.
@@ -178,18 +202,19 @@ class PrefShockConsumerType(IndShockConsumerType):
         Returns
         -------
         None
-        '''
+        """
         raise NotImplementedError()
 
 
-class KinkyPrefConsumerType(PrefShockConsumerType,KinkedRconsumerType):
-    '''
+class KinkyPrefConsumerType(PrefShockConsumerType, KinkedRconsumerType):
+    """
     A class for representing consumers who experience multiplicative shocks to
     utility each period, specified as iid lognormal and different interest rates
     on borrowing vs saving.
-    '''
-    def __init__(self,cycles=1,time_flow=True,**kwds):
-        '''
+    """
+
+    def __init__(self, cycles=1, time_flow=True, **kwds):
+        """
         Instantiate a new ConsumerType with given data, and construct objects
         to be used during solution (income distribution, assets grid, etc).
         See ConsumerParameters.init_kinky_pref for a dictionary of the keywords
@@ -205,29 +230,45 @@ class KinkyPrefConsumerType(PrefShockConsumerType,KinkedRconsumerType):
         Returns
         -------
         None
-        '''
-        IndShockConsumerType.__init__(self,**kwds)
-        self.solveOnePeriod = solveConsKinkyPref # Choose correct solver
-        self.addToTimeInv('Rboro','Rsave')
-        self.delFromTimeInv('Rfree')
-        
+        """
+        IndShockConsumerType.__init__(self, **kwds)
+        self.solveOnePeriod = solveConsKinkyPref  # Choose correct solver
+        self.addToTimeInv("Rboro", "Rsave")
+        self.delFromTimeInv("Rfree")
+
     def preSolve(self):
         self.updateSolutionTerminal()
 
-    def getRfree(self): # Specify which getRfree to use
+    def getRfree(self):  # Specify which getRfree to use
         return KinkedRconsumerType.getRfree(self)
+
 
 ###############################################################################
 
+
 class ConsPrefShockSolver(ConsIndShockSolver):
-    '''
+    """
     A class for solving the one period consumption-saving problem with risky
     income (permanent and transitory shocks) and multiplicative shocks to utility
     each period.
-    '''
-    def __init__(self,solution_next,IncomeDstn,PrefShkDstn,LivPrb,DiscFac,CRRA,
-                      Rfree,PermGroFac,BoroCnstArt,aXtraGrid,vFuncBool,CubicBool):
-        '''
+    """
+
+    def __init__(
+        self,
+        solution_next,
+        IncomeDstn,
+        PrefShkDstn,
+        LivPrb,
+        DiscFac,
+        CRRA,
+        Rfree,
+        PermGroFac,
+        BoroCnstArt,
+        aXtraGrid,
+        vFuncBool,
+        CubicBool,
+    ):
+        """
         Constructor for a new solver for problems with risky income, a different
         interest rate on borrowing and saving, and multiplicative shocks to utility.
 
@@ -272,14 +313,26 @@ class ConsPrefShockSolver(ConsIndShockSolver):
         Returns
         -------
         None
-        '''
-        ConsIndShockSolver.__init__(self,solution_next,IncomeDstn,LivPrb,DiscFac,CRRA,
-                      Rfree,PermGroFac,BoroCnstArt,aXtraGrid,vFuncBool,CubicBool)
+        """
+        ConsIndShockSolver.__init__(
+            self,
+            solution_next,
+            IncomeDstn,
+            LivPrb,
+            DiscFac,
+            CRRA,
+            Rfree,
+            PermGroFac,
+            BoroCnstArt,
+            aXtraGrid,
+            vFuncBool,
+            CubicBool,
+        )
         self.PrefShkPrbs = PrefShkDstn[0]
         self.PrefShkVals = PrefShkDstn[1]
 
-    def getPointsForInterpolation(self,EndOfPrdvP,aNrmNow):
-        '''
+    def getPointsForInterpolation(self, EndOfPrdvP, aNrmNow):
+        """
         Find endogenous interpolation points for each asset point and each
         discrete preference shock.
 
@@ -297,22 +350,27 @@ class ConsPrefShockSolver(ConsIndShockSolver):
             Consumption points for interpolation.
         m_for_interpolation : np.array
             Corresponding market resource points for interpolation.
-        '''
-        c_base       = self.uPinv(EndOfPrdvP)
+        """
+        c_base = self.uPinv(EndOfPrdvP)
         PrefShkCount = self.PrefShkVals.size
-        PrefShk_temp = np.tile(np.reshape(self.PrefShkVals**(1.0/self.CRRA),(PrefShkCount,1)),
-                               (1,c_base.size))
-        self.cNrmNow = np.tile(c_base,(PrefShkCount,1))*PrefShk_temp
-        self.mNrmNow = self.cNrmNow + np.tile(aNrmNow,(PrefShkCount,1))
+        PrefShk_temp = np.tile(
+            np.reshape(self.PrefShkVals ** (1.0 / self.CRRA), (PrefShkCount, 1)),
+            (1, c_base.size),
+        )
+        self.cNrmNow = np.tile(c_base, (PrefShkCount, 1)) * PrefShk_temp
+        self.mNrmNow = self.cNrmNow + np.tile(aNrmNow, (PrefShkCount, 1))
 
         # Add the bottom point to the c and m arrays
-        m_for_interpolation = np.concatenate((self.BoroCnstNat*np.ones((PrefShkCount,1)),
-                                              self.mNrmNow),axis=1)
-        c_for_interpolation = np.concatenate((np.zeros((PrefShkCount,1)),self.cNrmNow),axis=1)
-        return c_for_interpolation,m_for_interpolation
+        m_for_interpolation = np.concatenate(
+            (self.BoroCnstNat * np.ones((PrefShkCount, 1)), self.mNrmNow), axis=1
+        )
+        c_for_interpolation = np.concatenate(
+            (np.zeros((PrefShkCount, 1)), self.cNrmNow), axis=1
+        )
+        return c_for_interpolation, m_for_interpolation
 
-    def usePointsForInterpolation(self,cNrm,mNrm,interpolator):
-        '''
+    def usePointsForInterpolation(self, cNrm, mNrm, interpolator):
+        """
         Make a basic solution object with a consumption function and marginal
         value function (unconditional on the preference shock).
 
@@ -330,34 +388,46 @@ class ConsPrefShockSolver(ConsIndShockSolver):
         solution_now : ConsumerSolution
             The solution to this period's consumption-saving problem, with a
             consumption function, marginal value function, and minimum m.
-        '''
+        """
         # Make the preference-shock specific consumption functions
         PrefShkCount = self.PrefShkVals.size
-        cFunc_list   = []
+        cFunc_list = []
         for j in range(PrefShkCount):
-            MPCmin_j         = self.MPCminNow*self.PrefShkVals[j]**(1.0/self.CRRA)
-            cFunc_this_shock = LowerEnvelope(LinearInterp(mNrm[j,:],cNrm[j,:],
-                                             intercept_limit=self.hNrmNow*MPCmin_j,
-                                             slope_limit=MPCmin_j),self.cFuncNowCnst)
+            MPCmin_j = self.MPCminNow * self.PrefShkVals[j] ** (1.0 / self.CRRA)
+            cFunc_this_shock = LowerEnvelope(
+                LinearInterp(
+                    mNrm[j, :],
+                    cNrm[j, :],
+                    intercept_limit=self.hNrmNow * MPCmin_j,
+                    slope_limit=MPCmin_j,
+                ),
+                self.cFuncNowCnst,
+            )
             cFunc_list.append(cFunc_this_shock)
 
         # Combine the list of consumption functions into a single interpolation
-        cFuncNow = LinearInterpOnInterp1D(cFunc_list,self.PrefShkVals)
+        cFuncNow = LinearInterpOnInterp1D(cFunc_list, self.PrefShkVals)
 
         # Make the ex ante marginal value function (before the preference shock)
         m_grid = self.aXtraGrid + self.mNrmMinNow
         vP_vec = np.zeros_like(m_grid)
-        for j in range(PrefShkCount): # numeric integration over the preference shock
-            vP_vec += self.uP(cFunc_list[j](m_grid))*self.PrefShkPrbs[j]*self.PrefShkVals[j]
+        for j in range(PrefShkCount):  # numeric integration over the preference shock
+            vP_vec += (
+                self.uP(cFunc_list[j](m_grid))
+                * self.PrefShkPrbs[j]
+                * self.PrefShkVals[j]
+            )
         vPnvrs_vec = self.uPinv(vP_vec)
-        vPfuncNow  = MargValueFunc(LinearInterp(m_grid,vPnvrs_vec),self.CRRA)
+        vPfuncNow = MargValueFunc(LinearInterp(m_grid, vPnvrs_vec), self.CRRA)
 
         # Store the results in a solution object and return it
-        solution_now = ConsumerSolution(cFunc=cFuncNow, vPfunc=vPfuncNow, mNrmMin=self.mNrmMinNow)
+        solution_now = ConsumerSolution(
+            cFunc=cFuncNow, vPfunc=vPfuncNow, mNrmMin=self.mNrmMinNow
+        )
         return solution_now
 
-    def makevFunc(self,solution):
-        '''
+    def makevFunc(self, solution):
+        """
         Make the beginning-of-period value function (unconditional on the shock).
 
         Parameters
@@ -371,37 +441,54 @@ class ConsPrefShockSolver(ConsIndShockSolver):
         vFuncNow : ValueFunc
             A representation of the value function for this period, defined over
             normalized market resources m: v = vFuncNow(m).
-        '''
+        """
         # Compute expected value and marginal value on a grid of market resources,
         # accounting for all of the discrete preference shocks
         PrefShkCount = self.PrefShkVals.size
-        mNrm_temp   = self.mNrmMinNow + self.aXtraGrid
-        vNrmNow     = np.zeros_like(mNrm_temp)
-        vPnow       = np.zeros_like(mNrm_temp)
+        mNrm_temp = self.mNrmMinNow + self.aXtraGrid
+        vNrmNow = np.zeros_like(mNrm_temp)
+        vPnow = np.zeros_like(mNrm_temp)
         for j in range(PrefShkCount):
-            this_shock  = self.PrefShkVals[j]
-            this_prob   = self.PrefShkPrbs[j]
-            cNrmNow     = solution.cFunc(mNrm_temp,this_shock*np.ones_like(mNrm_temp))
-            aNrmNow     = mNrm_temp - cNrmNow
-            vNrmNow    += this_prob*(this_shock*self.u(cNrmNow) + self.EndOfPrdvFunc(aNrmNow))
-            vPnow      += this_prob*this_shock*self.uP(cNrmNow)
+            this_shock = self.PrefShkVals[j]
+            this_prob = self.PrefShkPrbs[j]
+            cNrmNow = solution.cFunc(mNrm_temp, this_shock * np.ones_like(mNrm_temp))
+            aNrmNow = mNrm_temp - cNrmNow
+            vNrmNow += this_prob * (
+                this_shock * self.u(cNrmNow) + self.EndOfPrdvFunc(aNrmNow)
+            )
+            vPnow += this_prob * this_shock * self.uP(cNrmNow)
 
         # Construct the beginning-of-period value function
-        vNvrs        = self.uinv(vNrmNow) # value transformed through inverse utility
-        vNvrsP       = vPnow*self.uinvP(vNrmNow)
-        mNrm_temp    = np.insert(mNrm_temp,0,self.mNrmMinNow)
-        vNvrs        = np.insert(vNvrs,0,0.0)
-        vNvrsP       = np.insert(vNvrsP,0,self.MPCmaxEff**(-self.CRRA/(1.0-self.CRRA)))
-        MPCminNvrs   = self.MPCminNow**(-self.CRRA/(1.0-self.CRRA))
-        vNvrsFuncNow = CubicInterp(mNrm_temp,vNvrs,vNvrsP,MPCminNvrs*self.hNrmNow,MPCminNvrs)
-        vFuncNow     = ValueFunc(vNvrsFuncNow,self.CRRA)
+        vNvrs = self.uinv(vNrmNow)  # value transformed through inverse utility
+        vNvrsP = vPnow * self.uinvP(vNrmNow)
+        mNrm_temp = np.insert(mNrm_temp, 0, self.mNrmMinNow)
+        vNvrs = np.insert(vNvrs, 0, 0.0)
+        vNvrsP = np.insert(
+            vNvrsP, 0, self.MPCmaxEff ** (-self.CRRA / (1.0 - self.CRRA))
+        )
+        MPCminNvrs = self.MPCminNow ** (-self.CRRA / (1.0 - self.CRRA))
+        vNvrsFuncNow = CubicInterp(
+            mNrm_temp, vNvrs, vNvrsP, MPCminNvrs * self.hNrmNow, MPCminNvrs
+        )
+        vFuncNow = ValueFunc(vNvrsFuncNow, self.CRRA)
         return vFuncNow
 
 
-def solveConsPrefShock(solution_next,IncomeDstn,PrefShkDstn,
-                       LivPrb,DiscFac,CRRA,Rfree,PermGroFac,BoroCnstArt,
-                       aXtraGrid,vFuncBool,CubicBool):
-    '''
+def solveConsPrefShock(
+    solution_next,
+    IncomeDstn,
+    PrefShkDstn,
+    LivPrb,
+    DiscFac,
+    CRRA,
+    Rfree,
+    PermGroFac,
+    BoroCnstArt,
+    aXtraGrid,
+    vFuncBool,
+    CubicBool,
+):
+    """
     Solves a single period of a consumption-saving model with preference shocks
     to marginal utility.  Problem is solved using the method of endogenous gridpoints.
 
@@ -454,25 +541,53 @@ def solveConsPrefShock(solution_next,IncomeDstn,PrefShkDstn,
         function is defined over normalized market resources and the preference
         shock, c = cFunc(m,PrefShk), but the (marginal) value function is defined
         unconditionally on the shock, just before it is revealed.
-    '''
-    solver = ConsPrefShockSolver(solution_next,IncomeDstn,PrefShkDstn,LivPrb,
-                             DiscFac,CRRA,Rfree,PermGroFac,BoroCnstArt,aXtraGrid,
-                             vFuncBool,CubicBool)
+    """
+    solver = ConsPrefShockSolver(
+        solution_next,
+        IncomeDstn,
+        PrefShkDstn,
+        LivPrb,
+        DiscFac,
+        CRRA,
+        Rfree,
+        PermGroFac,
+        BoroCnstArt,
+        aXtraGrid,
+        vFuncBool,
+        CubicBool,
+    )
     solver.prepareToSolve()
     solution = solver.solve()
     return solution
 
+
 ###############################################################################
 
-class ConsKinkyPrefSolver(ConsPrefShockSolver,ConsKinkedRsolver):
-    '''
+
+class ConsKinkyPrefSolver(ConsPrefShockSolver, ConsKinkedRsolver):
+    """
     A class for solving the one period consumption-saving problem with risky
     income (permanent and transitory shocks), multiplicative shocks to utility
     each period, and a different interest rate on saving vs borrowing.
-    '''
-    def __init__(self,solution_next,IncomeDstn,PrefShkDstn,LivPrb,DiscFac,CRRA,
-                      Rboro,Rsave,PermGroFac,BoroCnstArt,aXtraGrid,vFuncBool,CubicBool):
-        '''
+    """
+
+    def __init__(
+        self,
+        solution_next,
+        IncomeDstn,
+        PrefShkDstn,
+        LivPrb,
+        DiscFac,
+        CRRA,
+        Rboro,
+        Rsave,
+        PermGroFac,
+        BoroCnstArt,
+        aXtraGrid,
+        vFuncBool,
+        CubicBool,
+    ):
+        """
         Constructor for a new solver for problems with risky income, a different
         interest rate on borrowing and saving, and multiplicative shocks to utility.
 
@@ -521,17 +636,42 @@ class ConsKinkyPrefSolver(ConsPrefShockSolver,ConsKinkedRsolver):
         Returns
         -------
         None
-        '''
-        ConsKinkedRsolver.__init__(self,solution_next,IncomeDstn,LivPrb,DiscFac,CRRA,
-                      Rboro,Rsave,PermGroFac,BoroCnstArt,aXtraGrid,vFuncBool,CubicBool)
+        """
+        ConsKinkedRsolver.__init__(
+            self,
+            solution_next,
+            IncomeDstn,
+            LivPrb,
+            DiscFac,
+            CRRA,
+            Rboro,
+            Rsave,
+            PermGroFac,
+            BoroCnstArt,
+            aXtraGrid,
+            vFuncBool,
+            CubicBool,
+        )
         self.PrefShkPrbs = PrefShkDstn[0]
         self.PrefShkVals = PrefShkDstn[1]
 
 
-def solveConsKinkyPref(solution_next,IncomeDstn,PrefShkDstn,
-                       LivPrb,DiscFac,CRRA,Rboro,Rsave,PermGroFac,BoroCnstArt,
-                       aXtraGrid,vFuncBool,CubicBool):
-    '''
+def solveConsKinkyPref(
+    solution_next,
+    IncomeDstn,
+    PrefShkDstn,
+    LivPrb,
+    DiscFac,
+    CRRA,
+    Rboro,
+    Rsave,
+    PermGroFac,
+    BoroCnstArt,
+    aXtraGrid,
+    vFuncBool,
+    CubicBool,
+):
+    """
     Solves a single period of a consumption-saving model with preference shocks
     to marginal utility and a different interest rate on saving vs borrowing.
     Problem is solved using the method of endogenous gridpoints.
@@ -589,63 +729,84 @@ def solveConsKinkyPref(solution_next,IncomeDstn,PrefShkDstn,
         function is defined over normalized market resources and the preference
         shock, c = cFunc(m,PrefShk), but the (marginal) value function is defined
         unconditionally on the shock, just before it is revealed.
-    '''
-    solver = ConsKinkyPrefSolver(solution_next,IncomeDstn,PrefShkDstn,LivPrb,
-                             DiscFac,CRRA,Rboro,Rsave,PermGroFac,BoroCnstArt,
-                             aXtraGrid,vFuncBool,CubicBool)
+    """
+    solver = ConsKinkyPrefSolver(
+        solution_next,
+        IncomeDstn,
+        PrefShkDstn,
+        LivPrb,
+        DiscFac,
+        CRRA,
+        Rboro,
+        Rsave,
+        PermGroFac,
+        BoroCnstArt,
+        aXtraGrid,
+        vFuncBool,
+        CubicBool,
+    )
     solver.prepareToSolve()
     solution = solver.solve()
     return solution
 
+
 ###############################################################################
+
 
 def main():
     import HARK.ConsumptionSaving.ConsumerParameters as Params
     import matplotlib.pyplot as plt
     from HARK.utilities import plotFuncs
     from time import clock
-    mystr = lambda number : "{:.4f}".format(number)
+
+    mystr = lambda number: "{:.4f}".format(number)
 
     do_simulation = True
 
     # Make and solve a preference shock consumer
     PrefShockExample = PrefShockConsumerType(**Params.init_preference_shocks)
-    PrefShockExample.cycles = 0 # Infinite horizon
+    PrefShockExample.cycles = 0  # Infinite horizon
 
     t_start = clock()
     PrefShockExample.solve()
     t_end = clock()
-    print('Solving a preference shock consumer took ' + str(t_end-t_start) + ' seconds.')
+    print(
+        "Solving a preference shock consumer took " + str(t_end - t_start) + " seconds."
+    )
 
     # Plot the consumption function at each discrete shock
-    m = np.linspace(PrefShockExample.solution[0].mNrmMin,5,200)
-    print('Consumption functions at each discrete shock:')
+    m = np.linspace(PrefShockExample.solution[0].mNrmMin, 5, 200)
+    print("Consumption functions at each discrete shock:")
     for j in range(PrefShockExample.PrefShkDstn[0][1].size):
         PrefShk = PrefShockExample.PrefShkDstn[0][1][j]
-        c = PrefShockExample.solution[0].cFunc(m,PrefShk*np.ones_like(m))
-        plt.plot(m,c)
-    plt.xlim([0.,None])
-    plt.ylim([0.,None])
+        c = PrefShockExample.solution[0].cFunc(m, PrefShk * np.ones_like(m))
+        plt.plot(m, c)
+    plt.xlim([0.0, None])
+    plt.ylim([0.0, None])
     plt.show()
 
-    print('Consumption function (and MPC) when shock=1:')
-    c = PrefShockExample.solution[0].cFunc(m,np.ones_like(m))
-    k = PrefShockExample.solution[0].cFunc.derivativeX(m,np.ones_like(m))
-    plt.plot(m,c)
-    plt.plot(m,k)
-    plt.xlim([0.,None])
-    plt.ylim([0.,None])
+    print("Consumption function (and MPC) when shock=1:")
+    c = PrefShockExample.solution[0].cFunc(m, np.ones_like(m))
+    k = PrefShockExample.solution[0].cFunc.derivativeX(m, np.ones_like(m))
+    plt.plot(m, c)
+    plt.plot(m, k)
+    plt.xlim([0.0, None])
+    plt.ylim([0.0, None])
     plt.show()
 
     if PrefShockExample.vFuncBool:
-        print('Value function (unconditional on shock):')
-        plotFuncs(PrefShockExample.solution[0].vFunc,PrefShockExample.solution[0].mNrmMin+0.5,5)
+        print("Value function (unconditional on shock):")
+        plotFuncs(
+            PrefShockExample.solution[0].vFunc,
+            PrefShockExample.solution[0].mNrmMin + 0.5,
+            5,
+        )
 
     # Test the simulator for the pref shock class
     if do_simulation:
         PrefShockExample.T_sim = 120
-        PrefShockExample.track_vars = ['cNrmNow']
-        PrefShockExample.makeShockHistory() # This is optional
+        PrefShockExample.track_vars = ["cNrmNow"]
+        PrefShockExample.makeShockHistory()  # This is optional
         PrefShockExample.initializeSim()
         PrefShockExample.simulate()
 
@@ -653,42 +814,48 @@ def main():
 
     # Make and solve a "kinky preferece" consumer, whose model combines KinkedR and PrefShock
     KinkyPrefExample = KinkyPrefConsumerType(**Params.init_kinky_pref)
-    KinkyPrefExample.cycles = 0 # Infinite horizon
+    KinkyPrefExample.cycles = 0  # Infinite horizon
 
     t_start = clock()
     KinkyPrefExample.solve()
     t_end = clock()
-    print('Solving a kinky preference consumer took ' + str(t_end-t_start) + ' seconds.')
+    print(
+        "Solving a kinky preference consumer took " + str(t_end - t_start) + " seconds."
+    )
 
     # Plot the consumption function at each discrete shock
-    m = np.linspace(KinkyPrefExample.solution[0].mNrmMin,5,200)
-    print('Consumption functions at each discrete shock:')
+    m = np.linspace(KinkyPrefExample.solution[0].mNrmMin, 5, 200)
+    print("Consumption functions at each discrete shock:")
     for j in range(KinkyPrefExample.PrefShkDstn[0][1].size):
         PrefShk = KinkyPrefExample.PrefShkDstn[0][1][j]
-        c = KinkyPrefExample.solution[0].cFunc(m,PrefShk*np.ones_like(m))
-        plt.plot(m,c)
-    plt.ylim([0.,None])
+        c = KinkyPrefExample.solution[0].cFunc(m, PrefShk * np.ones_like(m))
+        plt.plot(m, c)
+    plt.ylim([0.0, None])
     plt.show()
 
-    print('Consumption function (and MPC) when shock=1:')
-    c = KinkyPrefExample.solution[0].cFunc(m,np.ones_like(m))
-    k = KinkyPrefExample.solution[0].cFunc.derivativeX(m,np.ones_like(m))
-    plt.plot(m,c)
-    plt.plot(m,k)
-    plt.ylim([0.,None])
+    print("Consumption function (and MPC) when shock=1:")
+    c = KinkyPrefExample.solution[0].cFunc(m, np.ones_like(m))
+    k = KinkyPrefExample.solution[0].cFunc.derivativeX(m, np.ones_like(m))
+    plt.plot(m, c)
+    plt.plot(m, k)
+    plt.ylim([0.0, None])
     plt.show()
 
     if KinkyPrefExample.vFuncBool:
-        print('Value function (unconditional on shock):')
-        plotFuncs(KinkyPrefExample.solution[0].vFunc,KinkyPrefExample.solution[0].mNrmMin+0.5,5)
+        print("Value function (unconditional on shock):")
+        plotFuncs(
+            KinkyPrefExample.solution[0].vFunc,
+            KinkyPrefExample.solution[0].mNrmMin + 0.5,
+            5,
+        )
 
     # Test the simulator for the kinky preference class
     if do_simulation:
         KinkyPrefExample.T_sim = 120
-        KinkyPrefExample.track_vars = ['cNrmNow','PrefShkNow']
+        KinkyPrefExample.track_vars = ["cNrmNow", "PrefShkNow"]
         KinkyPrefExample.initializeSim()
         KinkyPrefExample.simulate()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

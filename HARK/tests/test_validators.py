@@ -2,13 +2,14 @@ import unittest
 
 from HARK.validators import non_empty
 
+
 class ValidatorsTests(unittest.TestCase):
-    '''
+    """
     Tests for validator decorators which validate function arguments
-    '''
+    """
 
     def test_non_empty(self):
-        @non_empty('list_a')
+        @non_empty("list_a")
         def foo(list_a, list_b):
             pass
 
@@ -17,22 +18,19 @@ class ValidatorsTests(unittest.TestCase):
         except Exception:
             self.fail()
         with self.assertRaisesRegexp(
-            TypeError,
-            'Expected non-empty argument for parameter list_a',
+            TypeError, "Expected non-empty argument for parameter list_a"
         ):
             foo([], [1])
 
-        @non_empty('list_a', 'list_b')
+        @non_empty("list_a", "list_b")
         def foo(list_a, list_b):
             pass
 
         with self.assertRaisesRegexp(
-            TypeError,
-            'Expected non-empty argument for parameter list_b',
+            TypeError, "Expected non-empty argument for parameter list_b"
         ):
             foo([1], [])
         with self.assertRaisesRegexp(
-            TypeError,
-            'Expected non-empty argument for parameter list_a',
+            TypeError, "Expected non-empty argument for parameter list_a"
         ):
             foo([], [1])

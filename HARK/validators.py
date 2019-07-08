@@ -1,6 +1,6 @@
-'''
+"""
 Decorators which can be used for validating arguments passed into decorated functions
-'''
+"""
 
 from __future__ import print_function
 
@@ -14,9 +14,9 @@ else:
 
 
 def non_empty(*parameter_names):
-    '''
+    """
     Enforces arguments to parameters passed in have len > 0
-    '''
+    """
 
     def _decorator(f):
         sig = signature(f)
@@ -28,8 +28,12 @@ def non_empty(*parameter_names):
             for parameter_name in parameter_names:
                 if not len(bindings.arguments[parameter_name]):
                     raise TypeError(
-                        'Expected non-empty argument for parameter {}'.format(parameter_name)
+                        "Expected non-empty argument for parameter {}".format(
+                            parameter_name
+                        )
                     )
             return f(*args, **kwargs)
+
         return _inner
+
     return _decorator
