@@ -13,7 +13,6 @@ import functools
 import warnings
 import numpy as np                  # Python's numeric library, abbreviated "np"
 import math
-import matplotlib.pyplot as plt                 # Python's plotting library
 # try:
 #     import matplotlib.pyplot as plt                 # Python's plotting library
 # except ImportError:
@@ -1224,6 +1223,7 @@ def plotFuncs(functions,bottom,top,N=1000,legend_kwds = None):
     -------
     none
     '''
+    import matplotlib.pyplot as plt
     if type(functions)==list:
         function_list = functions
     else:
@@ -1259,6 +1259,7 @@ def plotFuncsDer(functions,bottom,top,N=1000,legend_kwds = None):
     -------
     none
     '''
+    import matplotlib.pyplot as plt
     if type(functions)==list:
         function_list = functions
     else:
