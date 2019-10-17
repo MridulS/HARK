@@ -14,7 +14,7 @@ import warnings
 import numpy as np                  # Python's numeric library, abbreviated "np"
 import math
 # try:
-#     import matplotlib.pyplot as plt                 # Python's plotting library
+import matplotlib.pyplot as plt                 # Python's plotting library
 # except ImportError:
 #     import sys
 #     exception_type, value, traceback = sys.exc_info()
