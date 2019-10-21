@@ -1369,15 +1369,3 @@ def copy_module_to_local(full_module_name):
         copy_module(target_path, my_directory_full_path, my_module)
 
     return
-
-
-def main():
-    print("Sorry, HARK.core doesn't actually do anything on its own.")
-    print("To see some examples of its frameworks in action, try running a model module.")
-    print("Several interesting model modules can be found in /ConsumptionSavingModel.")
-    print('For an extraordinarily simple model that demonstrates the "microeconomic" and')
-    print('"macroeconomic" frameworks, see /FashionVictim/FashionVictimModel.')
-
-
-if __name__ == '__main__':
-    main()
