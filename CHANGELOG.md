@@ -21,7 +21,7 @@ Release Date: XX-XX-2020
  - Improved implementaion of parallelNelderMead [#300](https://github.com/econ-ark/HARK/pull/300)
  
 #### Minor Changes 
- - Notebook utility functions for determinig platform, GUI, latex (installation) are available in HARK.utilities [#512](https://github.com/econ-ark/HARK/pull/512)
+ - Notebook utility functions for determining platform, GUI, latex (installation) are available in HARK.utilities [#512](https://github.com/econ-ark/HARK/pull/512)
  - Few DemARKs moved to examples [#472](https://github.com/econ-ark/HARK/pull/472)
  - MaxKinks available in ConsumerParameters again [#486](https://github.com/econ-ark/HARK/pull/486)
 
