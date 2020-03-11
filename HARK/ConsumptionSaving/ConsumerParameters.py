@@ -1,3 +1,4 @@
+
 '''
 Specifies examples of the full set of parameters required to solve various
 consumption-saving models.  These models can be found in ConsIndShockModel,
@@ -372,7 +373,7 @@ init_portfolio['RiskyAvg']        = RiskyAvg
 init_portfolio['RiskyStd']        = RiskyStd
 init_portfolio['RiskyCount']      = RiskyCount
 init_portfolio['RiskyShareCount'] = RiskyShareCount
-init_portfolio['ShareCount']      = RiskyShareCount
+# init_portfolio['ShareCount']      = RiskyShareCount
 init_portfolio['AdjustPrb']       = AdjustPrb
 init_portfolio['aXtraMax']        = 100  # Make the grid of assets go much higher...
 init_portfolio['aXtraCount']      = 100  # ...and include many more gridpoints...
