@@ -23,7 +23,7 @@ from HARK.ConsumptionSaving.ConsIndShockModel import (
     utility_inv,    # inverse CRRA
 )
 from HARK.utilities import (
-    approxLognormal,    # for approximating the lognormal returns factor
+    approxNormal,    # for approximating the lognormal returns factor
     combineIndepDstns,  # for combining the existing
 )
 from HARK.simulation import drawLognormal  # random draws for simulating agents
@@ -262,7 +262,7 @@ def RiskyDstnFactory(RiskyAvg=1.0, RiskyStd=0.0):
     mu = np.log(RiskyAvg / (np.sqrt(1 + RiskyVar / RiskyAvgSqrd)))
     sigma = np.sqrt(np.log(1 + RiskyVar / RiskyAvgSqrd))
 
-    return lambda RiskyCount: approxLognormal(RiskyCount, mu=mu, sigma=sigma)
+    return lambda RiskyCount: approxNormal(RiskyCount, mu=mu, sigma=sigma)
 
 
 def LogNormalRiskyDstnDraw(RiskyAvg=1.0, RiskyStd=0.0):
