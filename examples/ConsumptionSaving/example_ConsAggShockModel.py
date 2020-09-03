@@ -1,5 +1,5 @@
 from time import process_time
-import scipy
+import scipy as sp
 import numpy as np
 import matplotlib.pyplot as plt
 from HARK.utilities import plotFuncs
