@@ -1,6 +1,6 @@
 from time import process_time
 import scipy as sp
-import numpy as np
+import numpy as npp
 import matplotlib.pyplot as plt
 from HARK.utilities import plotFuncs
 from HARK.distribution import DiscreteDistribution
