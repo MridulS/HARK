@@ -18,9 +18,19 @@ jobs:
         script: |
           var PR_HEAD_USERREPO = process.env.PR_HEAD_USERREPO;
           var PR_HEAD_SHA = process.env.PR_HEAD_SHA;
-          github.issues.createComment({
-            issue_number: context.issue.number,
+          // Get the branch name
+          github.pulls.get({
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: `[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/${PR_HEAD_USERREPO}/${PR_HEAD_SHA}) :point_left: Launch a binder notebook on this branch for commit ${PR_HEAD_SHA}`
+            pull_number: context.payload.issue.number
+          }).then( (pr) => {
+
+            // use the branch name to make a comment  on the PR with a Binder badge
+            var BRANCH_NAME = pr.data.head.ref
+            github.issues.createComment({
+              issue_number: context.payload.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/${PR_HEAD_USERREPO}/${PR_HEAD_SHA}) :point_left: Launch a binder notebook on this branch for commit ${PR_HEAD_SHA}`
+            })
           })
