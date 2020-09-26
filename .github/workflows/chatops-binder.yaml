@@ -1,6 +1,6 @@
 #./github/workflows/chatops-binder.yaml
 name: Chatops Binder
-on: [issue_comment, pull_request_target] # issues and PRs are equivalent in terms of comments for the GitHub API
+on: [issue_comment] # issues and PRs are equivalent in terms of comments for the GitHub API
 
 jobs:
   trigger-chatops:
@@ -12,12 +12,10 @@ jobs:
       #  (1) Get the branch name of the PR that has been commented on with "/binder" 
       #  (2) make a comment on the PR with the binder badge
     - name: comment on PR with Binder link
-      uses: actions/github-script@v1
+      uses: actions/github-script@v3
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
-          var PR_HEAD_USERREPO = process.env.PR_HEAD_USERREPO;
-          var PR_HEAD_SHA = process.env.PR_HEAD_SHA;
           // Get the branch name
           github.pulls.get({
             owner: context.repo.owner,
@@ -31,9 +29,6 @@ jobs:
               issue_number: context.payload.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/${PR_HEAD_USERREPO}/${PR_HEAD_SHA}) :point_left: Launch a binder notebook on this branch for commit ${PR_HEAD_SHA}`
+              body: `[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/${context.ref}/) :point_left: Launch a binder notebook on this branch`
             })
           })
-        env:
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          PR_HEAD_USERREPO: ${{ github.event.pull_request.head.repo.full_name }}
