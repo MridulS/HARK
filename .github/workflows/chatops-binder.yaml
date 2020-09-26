@@ -1,6 +1,6 @@
 #./github/workflows/chatops-binder.yaml
 name: Chatops Binder
-on: [issue_comment] # issues and PRs are equivalent in terms of comments for the GitHub API
+on: [issue_comment, pull_request_target] # issues and PRs are equivalent in terms of comments for the GitHub API
 
 jobs:
   trigger-chatops:
