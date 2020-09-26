@@ -29,6 +29,6 @@ jobs:
               issue_number: context.payload.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/${context.ref}/) :point_left: Launch a binder notebook on this branch`
+              body: `[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/${context.payload.pull_request}/) :point_left: Launch a binder notebook on this branch`
             })
           })
